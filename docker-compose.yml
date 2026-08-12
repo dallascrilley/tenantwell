@@ -1,0 +1,21 @@
+name: tenantwell
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tenantwell
+    ports:
+      # 5433 on the host so this never collides with a local Postgres on 5432.
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d tenantwell"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    tmpfs:
+      # Throwaway data directory: the suite creates and drops databases, and
+      # nothing here is worth persisting across runs.
+      - /var/lib/postgresql/data

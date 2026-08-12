@@ -1,0 +1,8 @@
+# esbuild (a vitest dependency) needs its postinstall to link the platform
+# binary. pnpm blocks build scripts by default; these allowlist the one we need.
+# `allowBuilds` is the pnpm 10+ spelling, `onlyBuiltDependencies` the older one.
+allowBuilds:
+  esbuild: true
+
+onlyBuiltDependencies:
+  - esbuild
