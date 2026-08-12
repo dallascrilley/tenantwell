@@ -13,7 +13,12 @@
   "bin": {
     "tenantwell": "./dist/cli.js"
   },
-  "files": ["dist", "migrations", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "migrations",
+    "README.md",
+    "LICENSE"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dallascrilley/tenantwell.git"
@@ -52,6 +57,6 @@
     "@types/pg": "^8.11.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.7"
   }
 }
