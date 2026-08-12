@@ -53,7 +53,14 @@ describe("proof 2: raw SQL under the application role", () => {
       policy_count: string;
     }>("SELECT * FROM tenant_scoped_tables ORDER BY table_name");
 
-    expect(result.rows.map((r) => r.table_name)).toEqual(["comments", "documents", "projects"]);
+    // `tenants` is isolated by `id = app_current_tenant_id()` (no tenant_id
+    // column) and must still appear here so a missing policy on it fails CI.
+    expect(result.rows.map((r) => r.table_name)).toEqual([
+      "comments",
+      "documents",
+      "projects",
+      "tenants",
+    ]);
     for (const row of result.rows) {
       expect(row.rls_enabled, `${row.table_name} RLS enabled`).toBe(true);
       expect(row.rls_forced, `${row.table_name} RLS forced`).toBe(true);

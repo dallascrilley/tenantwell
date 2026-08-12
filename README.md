@@ -1,5 +1,8 @@
 # Tenantwell
 
+[![CI](https://github.com/dallascrilley/tenantwell/actions/workflows/ci.yml/badge.svg)](https://github.com/dallascrilley/tenantwell/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 **Postgres row level security multi-tenancy, with the isolation test that proves it.**
 
 Most multi-tenant codebases enforce tenancy with a `WHERE tenant_id = $1` in
@@ -173,11 +176,11 @@ Expected output:
 
 ```
  ✓ test/adversarial-sql.test.ts (13 tests)
- ✓ test/tenant-isolation.test.ts (11 tests)
+ ✓ test/tenant-isolation.test.ts (12 tests)
  ✓ test/migration-checksum.test.ts (5 tests)
 
  Test Files  3 passed (3)
-      Tests  29 passed (29)
+      Tests  30 passed (30)
 ```
 
 Applying migrations to the development database directly:
@@ -218,9 +221,12 @@ Tear down with `pnpm db:down`.
 
 Other scripts: `pnpm typecheck`, `pnpm build`, `pnpm test:watch`.
 
-**Configuration.** `ADMIN_DATABASE_URL` and `APP_DATABASE_URL` (or `PGHOST` /
-`PGPORT`) override the defaults; see `.env.example`. The credentials in this
-repository are throwaway values for a disposable local container.
+**Configuration.** `ADMIN_DATABASE_URL`, `APP_DATABASE_URL`, and
+`APP_ROLE_PASSWORD` (or `PGHOST` / `PGPORT`) override the defaults; see
+`.env.example`. The app role password is set by the migrator at apply time, not
+baked into `migrations/`, so copying those SQL files alone does not install a
+known credential. The defaults here are throwaway values for a disposable local
+container.
 
 Each test file provisions and drops its own database, so the suite leaves
 nothing behind. Files run one at a time — migration `0001` does cluster-scoped
@@ -276,7 +282,14 @@ What this repository does **not** claim.
   of an event trigger and superuser rights.
 
 - **This is a demonstration of a pattern, not a library.** It is small enough
-  to read in full and copy from. There is no published package.
+  to read in full and copy from. There is no published package. The
+  `package.json` `exports` and `bin` fields exist so you can import or run the
+  extract locally; they are not a registry release claim.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup and the CI gate. Security
+reports go through [SECURITY.md](SECURITY.md), not public issues.
 
 ## License
 

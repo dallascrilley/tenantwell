@@ -17,13 +17,40 @@
 const DEFAULT_HOST = process.env.PGHOST ?? "localhost";
 const DEFAULT_PORT = process.env.PGPORT ?? "5433";
 
+/** Throwaway local default only. Never reuse on a shared or long-lived cluster. */
+const DEFAULT_APP_ROLE_PASSWORD = "tenantwell_app_local";
+
+/**
+ * Password for `tenantwell_app`. Prefer `APP_ROLE_PASSWORD`. If only
+ * `APP_DATABASE_URL` is set, the password is taken from that URL so the
+ * migrator's `ALTER ROLE` matches what the app will connect with.
+ *
+ * The password is deliberately NOT stored in migration SQL (see 0001).
+ */
+export const APP_ROLE_PASSWORD = (() => {
+  if (process.env.APP_ROLE_PASSWORD) {
+    return process.env.APP_ROLE_PASSWORD;
+  }
+  if (process.env.APP_DATABASE_URL) {
+    try {
+      const password = new URL(process.env.APP_DATABASE_URL).password;
+      if (password) {
+        return decodeURIComponent(password);
+      }
+    } catch {
+      // Fall through to the local default.
+    }
+  }
+  return DEFAULT_APP_ROLE_PASSWORD;
+})();
+
 export const ADMIN_DATABASE_URL =
   process.env.ADMIN_DATABASE_URL ??
   `postgres://postgres:postgres@${DEFAULT_HOST}:${DEFAULT_PORT}/tenantwell`;
 
 export const APP_DATABASE_URL =
   process.env.APP_DATABASE_URL ??
-  `postgres://tenantwell_app:tenantwell_app_local@${DEFAULT_HOST}:${DEFAULT_PORT}/tenantwell`;
+  `postgres://tenantwell_app:${encodeURIComponent(APP_ROLE_PASSWORD)}@${DEFAULT_HOST}:${DEFAULT_PORT}/tenantwell`;
 
 /** Swap the database name in a connection string, keeping credentials/host. */
 export function withDatabase(connectionString: string, database: string): string {

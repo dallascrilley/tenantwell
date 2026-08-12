@@ -1,4 +1,9 @@
-export { ADMIN_DATABASE_URL, APP_DATABASE_URL, withDatabase } from "./config.js";
+export {
+  ADMIN_DATABASE_URL,
+  APP_DATABASE_URL,
+  APP_ROLE_PASSWORD,
+  withDatabase,
+} from "./config.js";
 export {
   defaultMigrationsDirectory,
   loadMigrations,
