@@ -123,7 +123,7 @@ describe("proof 2: raw SQL under the application role", () => {
     expect(rows[0]).toMatchObject({ title: "Tenant A Runbook" });
   });
 
-  it("cannot rebind the tenant context to another tenant and read their rows", async () => {
+  it("CAN rebind the tenant context to another tenant — the documented limitation", async () => {
     // Rebinding is allowed - the GUC is not privileged - but it is not an
     // escalation: the attacker must already know a tenant id, and the far more
     // important property is that they cannot turn the policy OFF. This test

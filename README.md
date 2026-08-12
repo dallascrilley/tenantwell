@@ -46,8 +46,10 @@ worthless without them:
   pooled connection reports a `NULL` tenant. A session-level `SET` would leak
   one tenant's identity into the next request on that connection, and the leak
   would be invisible until two tenants happened to share a connection.
-- An unbound transaction sees **zero rows**, not all rows. `current_setting`
-  returns `NULL`, and `tenant_id = NULL` is never true, so the default is
+- An unbound transaction sees **zero rows**, not all rows. The
+  `app_current_tenant_id()` helper collapses an unset *or previously-cleared*
+  GUC (`current_setting` yields `NULL` or `''` depending on the connection's
+  history) to `NULL`, and `tenant_id = NULL` is never true, so the default is
   fail-closed.
 
 Read `src/repository.ts` and note what is missing from every statement: there
@@ -182,10 +184,12 @@ Applying migrations to the development database directly:
 
 ```bash
 $ pnpm migrate
+$ tsx src/cli.ts migrate
 applied 0001_tenancy_foundation.sql
 applied 0002_workspace_domain.sql
 
 $ pnpm migrate
+$ tsx src/cli.ts migrate
 No pending migrations.
 ```
 
@@ -199,10 +203,12 @@ $ docker compose exec -e PGPASSWORD=tenantwell_app_local postgres \
  count
 -------
      0
+(1 row)
 
   current_user  | rolbypassrls
 ----------------+--------------
  tenantwell_app | f
+(1 row)
 ```
 
 Zero rows with no tenant bound, from a role that cannot bypass RLS. That is the
