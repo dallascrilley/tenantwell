@@ -77,9 +77,11 @@ END
 $$;
 
 -- A guard against the most common way this pattern rots: someone adds a table
--- with a tenant_id column and forgets the policy. This is checked by the test
--- suite rather than enforced at write time, because CREATE TABLE cannot be
--- intercepted without an event trigger and superuser rights.
+-- with a tenant_id column and forgets the policy. Also includes `tenants`,
+-- which is isolated by `id = app_current_tenant_id()` rather than a
+-- `tenant_id` column. Checked by the test suite rather than enforced at write
+-- time, because CREATE TABLE cannot be intercepted without an event trigger
+-- and superuser rights.
 CREATE VIEW tenant_scoped_tables AS
 SELECT
   c.relname                                             AS table_name,
@@ -88,6 +90,15 @@ SELECT
   (SELECT count(*) FROM pg_policy p WHERE p.polrelid = c.oid) AS policy_count
 FROM pg_class c
 JOIN pg_namespace n ON n.oid = c.relnamespace
-JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped
 WHERE c.relkind = 'r'
-  AND n.nspname = 'public';
+  AND n.nspname = 'public'
+  AND (
+    c.relname = 'tenants'
+    OR EXISTS (
+      SELECT 1
+      FROM pg_attribute a
+      WHERE a.attrelid = c.oid
+        AND a.attname = 'tenant_id'
+        AND NOT a.attisdropped
+    )
+  );

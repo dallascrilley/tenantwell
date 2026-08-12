@@ -84,6 +84,21 @@ describe("proof 1: cross-tenant reads and writes through the app path", () => {
     expect(groundTruth.rowCount).toBe(1);
   });
 
+  it("cannot read another tenant's row from the tenants table", async () => {
+    // tenants is isolated on `id = app_current_tenant_id()`, not a tenant_id
+    // column. Prove that shape is enforced, not only the child tables.
+    const rows = await withTenant(db.app, fixture.tenantA.id, async (client) => {
+      const result = await client.query<{ id: string; slug: string }>(
+        "SELECT id, slug FROM tenants ORDER BY slug",
+      );
+      return result.rows;
+    });
+    expect(rows).toEqual([{ id: fixture.tenantA.id, slug: "acme-tenant-a" }]);
+
+    const groundTruth = await db.admin.query("SELECT count(*)::int AS n FROM tenants");
+    expect(groundTruth.rows[0]?.n).toBe(2);
+  });
+
   it("cannot update another tenant's row", async () => {
     const affected = await withTenant(db.app, fixture.tenantA.id, (client) =>
       renameDocument(client, fixture.tenantB.documentId, "Renamed by tenant A"),

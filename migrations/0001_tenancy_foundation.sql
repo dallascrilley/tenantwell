@@ -21,9 +21,14 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- check-then-create would race; catching the duplicate is the only version that
 -- actually holds. (The migration advisory lock does not help here: advisory
 -- locks are scoped to one database.)
+-- No password is set here on purpose. Baking a known password into a
+-- migration file is a copy-paste footgun when these files land on a shared
+-- cluster. The migrator (src/migrate.ts) sets the password from
+-- APP_ROLE_PASSWORD / APP_DATABASE_URL after applying SQL. Local defaults
+-- stay throwaway; production must supply its own.
 DO $$
 BEGIN
-  CREATE ROLE tenantwell_app LOGIN PASSWORD 'tenantwell_app_local'
+  CREATE ROLE tenantwell_app LOGIN
     NOSUPERUSER NOBYPASSRLS NOCREATEROLE NOCREATEDB NOINHERIT;
 EXCEPTION
   WHEN duplicate_object OR unique_violation THEN

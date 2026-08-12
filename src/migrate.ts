@@ -3,7 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "pg";
-import { ADMIN_DATABASE_URL } from "./config.js";
+import { ADMIN_DATABASE_URL, APP_ROLE_PASSWORD } from "./config.js";
 
 const MIGRATION_FILENAME = /^\d{4}_[a-z0-9_]+\.sql$/;
 
@@ -135,6 +135,22 @@ export async function runMigrations({
         throw error;
       }
     }
+
+    // Password lives outside migration SQL so the committed files never ship a
+    // known credential. Re-applied on every migrate so APP_ROLE_PASSWORD and
+    // APP_DATABASE_URL stay aligned with the role the app connects as.
+    //
+    // ALTER ROLE does not accept bind parameters (utility command). format(%L)
+    // is the safe quoting path — never string-interpolate the password.
+    const passwordSql = await client.query<{ sql: string }>(
+      "SELECT format('ALTER ROLE tenantwell_app PASSWORD %L', $1::text) AS sql",
+      [APP_ROLE_PASSWORD],
+    );
+    const alter = passwordSql.rows[0]?.sql;
+    if (!alter) {
+      throw new Error("Failed to build ALTER ROLE PASSWORD statement");
+    }
+    await client.query(alter);
 
     return applied;
   } finally {
