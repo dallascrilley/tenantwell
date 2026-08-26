@@ -51,7 +51,7 @@
   "dependencies": {
     "pg": "^8.13.1"
   },
-  "packageManager": "pnpm@11.20.0",
+  "packageManager": "pnpm@11.24.0",
   "devDependencies": {
     "@types/node": "^26.2.0",
     "@types/pg": "^8.11.10",
